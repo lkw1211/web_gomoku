@@ -12,7 +12,7 @@
 
 
 ## 완료
-#### 오목 UI 완료(2인 플레이가능)
+#### 오목 UI 완료(2인 플레이가능, https://hellotesthello.duckdns.org/gomoku )
 #### 싱글스레드 wasm 인공지능 완료. 
 
 
