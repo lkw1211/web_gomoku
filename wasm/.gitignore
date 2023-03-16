@@ -1,0 +1,8 @@
+test.js
+test_bg.wasm
+test_bg.wasm.d.ts
+test.d.ts
+target
+Cargo.lock
+worker.js
+https://github.com/lukesalamone/gomoku-2049/blob/master/worker.js

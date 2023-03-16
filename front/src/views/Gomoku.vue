@@ -60,13 +60,35 @@
 
 <script lang="ts" setup>
 import { reactive } from 'vue';
-import axios from '../services/axios';
 
 let color: any[] = [];
 let target: any[] = [];
 let current_target: any[] = [];
 let play_rows = 15;
 let board_rows = 14;
+
+function loadWasm() {
+  let msg = 'This demo requires a current version of Firefox (e.g., 79.0)';
+  if (typeof SharedArrayBuffer !== 'function') {
+    alert('this browser does not have SharedArrayBuffer support enabled' + '\n\n' + msg);
+    return
+  }
+  // Test for bulk memory operations with passive data segments
+  //  (module (memory 1) (data passive ""))
+  const buf = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
+    0x05, 0x03, 0x01, 0x00, 0x01, 0x0b, 0x03, 0x01, 0x01, 0x00]);
+  if (!WebAssembly.validate(buf)) {
+    alert('this browser does not support passive wasm memory, demo does not work' + '\n\n' + msg);
+    return
+  }
+
+  wasm_bindgen('../wasm/gomoku_bg.wasm')
+    .catch(console.error);
+}
+
+loadWasm();
+
+const { think_and_move, make_move, rank_of, file_of } = wasm_bindgen;
 
 for (let i = 0; i < play_rows; i++) {
 	let colorRow: any [] = [];
@@ -107,7 +129,7 @@ const initialState = {
 		}
 	],
 	color,
-	notation: [],
+	position: [],
 	current_target,
 	target,
 	player: 'none',
@@ -124,20 +146,20 @@ function resetClick() {
 }
 
 function undoClick() {
-	const undoPositions = state.notation.slice(-2);
+	const undoMoves = state.position.slice(-2);
 
-	undoPositions.forEach((pos: number[]) => {
-		state.color[pos[0]][pos[1]] = 'hide';
+	undoMoves.forEach((move: number) => {
+		state.color[rank_of(move)][file_of(move)] = 'hide';
 	});
-	const [oldLastI, oldLastJ] = undoPositions.slice(-1)[0];
-	state.target[oldLastI][oldLastJ] = 'hide';
+	const oldLastMove = undoMoves.slice(-1)[0];
+	state.target[rank_of(oldLastMove)][file_of(oldLastMove)] = 'hide';
 
-	state.notation = state.notation.slice(0, -2);
+	state.position = state.position.slice(0, -2);
 
-	if (state.notation.length > 0) {
-		const [lastI, lastJ] = state.notation.slice(-1)[0];
+	if (state.position.length > 0) {
+		const lastMove = state.position.slice(-1)[0];
 
-		state.target[lastI][lastJ] = 'last';
+		state.target[rank_of(lastMove)][file_of(lastMove)] = 'last';
 	}
 
 	if (state.turn == 'black') {
@@ -563,13 +585,10 @@ function isBanSearchTarget(i: number, j: number): boolean {
 	return false;
 };
 
-async function requestAINewPosition(notation: number[]) {
-	const { data } = await axios.post('/api/gomoku', {
-		notation,
-		time: state.time * 1000,
-	});
+async function requestAINewPosition(moves: number[]) {
+	let target = think_and_move(moves, state.time);
 
-	targetClick(data[0], data[1], true);
+	targetClick(rank_of(target), file_of(target), true);
 	putClick(true);
 }
 
@@ -591,7 +610,7 @@ async function putClick(byAI: boolean = false) {
 		let j = state.current_target[1];
 
 		state.color[i][j] = state.turn;
-		state.notation.push([i, j]);
+		state.position.push(make_move(i, j));
 
 		for (let a = 0; a < state.target.length; a++) {
 			for (let b = 0; b < state.target.length; b++) {
@@ -660,7 +679,7 @@ async function putClick(byAI: boolean = false) {
 		}
 
 		if (state.turn != state.player) {
-			await requestAINewPosition(state.notation);
+			await requestAINewPosition(state.position);
 		}
 	}
 }
