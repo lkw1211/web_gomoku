@@ -35,7 +35,7 @@
 		</el-row>
 	</div>
 	<el-dialog
-		v-model="colorView"
+		v-model="state.colorSelectVisible"
 		title="Select Place"
 		class="color-select-dialog"
 		:close-on-click-modal="false"
@@ -123,7 +123,6 @@ export default {
 	};
 
 	const state = reactive(JSON.parse(JSON.stringify(initialState)));
-	let colorView = computed(() => !state.byAI && state.colorSelectVisible);
 	const BOARD_BOUNDARY = 4;
 	const BOARD_SIDE_BIT = 5;
 
@@ -584,9 +583,13 @@ export default {
 	};
 
 	async function requestAINewPosition(moves) {
-		const target = await loadWasm(moves, state.time);
-		targetClick(rank_of(target), file_of(target), true);
-		putClick(true);
+		try{
+			const target = await loadWasm(moves, state.time);
+			targetClick(rank_of(target), file_of(target), true);
+			putClick(true);
+		} catch(err) {
+			alert(err);
+		}
 	}
 
 	async function putClick(byAI=false) {
@@ -680,7 +683,6 @@ export default {
 
     return { 
 		state,
-		colorView,
 		resetClick,
 		undoClick,
 		selectColor,
