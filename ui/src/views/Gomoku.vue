@@ -119,7 +119,7 @@ export default {
 		turn: 'black',
 		winState: 0,
 		blackMinMaxPos: [-1, -1, -1, -1],
-		time: 5,
+		time: 20,
 	};
 
 	const state = reactive(JSON.parse(JSON.stringify(initialState)));
