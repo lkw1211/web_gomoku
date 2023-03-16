@@ -60,7 +60,7 @@
 
 <script type="module">
 import router from '@/router';
-import { reactive, computed } from 'vue'
+import { reactive, computed, onMounted } from 'vue'
 
 export default {
   name: 'HomeView',
@@ -119,8 +119,7 @@ export default {
 		turn: 'black',
 		winState: 0,
 		blackMinMaxPos: [-1, -1, -1, -1],
-		time: 10,
-		byAI: true,
+		time: 5,
 	};
 
 	const state = reactive(JSON.parse(JSON.stringify(initialState)));
@@ -248,13 +247,13 @@ export default {
 		return 0;
 	}
 
-	function targetClick(i, j) {
+	function targetClick(i, j, byAI=false) {
 		if (state.player == 'none') {
 			state.colorSelectVisible = true;
 			return;
 		}
 		
-		if (state.color[i][j] != 'hide' || state.winState != 0 || (state.turn != state.player && !state.byAI)) return;
+		if (state.color[i][j] != 'hide' || state.winState != 0 || (state.turn != state.player && !byAI)) return;
 
 		for (let a = 0; a < state.target.length; a++) {
 			for (let b = 0; b < state.target.length; b++) {
@@ -584,24 +583,20 @@ export default {
 		return false;
 	};
 
-	// async function requestAINewPosition(moves) {
-	// 	let target = think_and_move(moves, state.time);
+	async function requestAINewPosition(moves) {
+		const target = await loadWasm(moves, state.time);
+		targetClick(rank_of(target), file_of(target), true);
+		putClick(true);
+	}
 
-	// 	targetClick(rank_of(target), file_of(target), true);
-	// 	putClick(true);
-	// }
-
-	async function putClick() {
+	async function putClick(byAI=false) {
 		if (state.player == 'none') {
 			state.colorSelectVisible = true;
 			return;
 		}
 
-		if (state.winState != 0 || (state.turn != state.player && !state.byAI)) {
+		if (state.winState != 0 || (state.turn != state.player && !byAI)) {
 			return;
-		} else {
-			console.log(state.winState, state.turn, state.player, state.byAI);
-			console.log(state.winState != 0, state.turn != state.player, !state.byAI, (state.turn != state.player && !state.byAI));
 		}
 
 		if (state.current_target.length > 0) {
@@ -677,7 +672,7 @@ export default {
 				state.turn = 'black';
 			}
 
-			if (state.turn != state.player && !state.byAI) {
+			if (state.turn != state.player && !byAI) {
 				await requestAINewPosition(state.position);
 			}
 		}
@@ -703,7 +698,7 @@ export default {
 		check6Ban,
 		checkBan,
 		isBanSearchTarget,
-		// requestAINewPosition,
+		requestAINewPosition,
 		putClick,
     }
   }
