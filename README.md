@@ -13,12 +13,12 @@
 
 ## 완료
 #### 오목 UI 완료(2인 플레이가능, https://hellotesthello.duckdns.org/gomoku )
-#### 싱글스레드 wasm 인공지능 완료. 
-
+#### 싱글스레드 wasm 인공지능 완료.
+#### 오목 UI에 wasm 적용. 
 
 
 ## 진행중
-#### 오목 UI에 wasm 적용. 
+#### IOS Out of Memory 관련 문제 해결(Ipad Air 4세대에서 발생)
 
 
 
