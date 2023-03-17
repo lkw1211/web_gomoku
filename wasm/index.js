@@ -20,5 +20,3 @@ function loadWasm() {
 }
 
 loadWasm();
-
-export default wasm_bindgen;
