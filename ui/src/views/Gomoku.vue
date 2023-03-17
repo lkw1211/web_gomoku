@@ -584,8 +584,8 @@ export default {
 
 	async function requestAINewPosition(moves) {
 		try{
-			const target = await loadWasm(moves, state.time);
-			targetClick(rank_of(target), file_of(target), true);
+			const target = await _think_and_move(moves, state.time);
+			targetClick(_rank_of(target), _file_of(target), true);
 			putClick(true);
 		} catch(err) {
 			alert(err);

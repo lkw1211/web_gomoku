@@ -1,4 +1,4 @@
-let wasm_bindgen;
+let wasm_bindgen_gomoku;
 (function() {
     const __exports = {};
     let script_src;
