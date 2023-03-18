@@ -1,4 +1,4 @@
-let wasm_bindgen_gomoku;
+let wasm_bindgen;
 (function() {
     const __exports = {};
     let script_src;
@@ -471,8 +471,9 @@ function getImports() {
     return imports;
 }
 
+// maximum 크기는 256MB = 4096(256 * 1024 * 1024 / 65536), iphone, ipad 등 기기에서 wasm에 허용되는 최대 메모리 크기가 작음
 function initMemory(imports, maybe_memory) {
-    imports.wbg.memory = maybe_memory || new WebAssembly.Memory({initial:154,maximum:65536,shared:true});
+    imports.wbg.memory = maybe_memory || new WebAssembly.Memory({initial:154,maximum:4096,shared:true});
 }
 
 function finalizeInit(instance, module) {

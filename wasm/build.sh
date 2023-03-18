@@ -12,13 +12,13 @@ set -ex
 #   features enabled, ensuring that LLVM will generate atomic instructions,
 #   shared memory, passive segments, etc.
 
-RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
+# RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
 RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals -C link-arg=--max-memory=268435456' \
-  # cargo build --target wasm32-unknown-unknown --release -Z build-std=std,panic_abort
+  cargo build --target wasm32-unknown-unknown --release -Z build-std=std,panic_abort
 
 # Note the usage of `--target no-modules` here which is required for passing
 # the memory import to each wasm module.
 wasm-bindgen \
   ./target/wasm32-unknown-unknown/release/gomoku.wasm \
-  --out-dir ../front/src/wasm \
+  --out-dir ../ui/public \
   --target no-modules
