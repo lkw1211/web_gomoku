@@ -2,12 +2,12 @@
 
 
 ## UI 폴더
-#### 오목 UI 관련  
+#### 오목 UI 부분 public 폴더에 빌드되어있는 wasm 파일을 사용
 
 
 
 ## Wasm 폴더
-#### 오목 인공지능 Wasm 관련  
+#### 오목 인공지능 Wasm 관련 빌드 후 UI 폴더의 public 폴더로 wasm 복사 필요
 
 
 
@@ -29,7 +29,7 @@
 
 
 
-## 실행방법
+## UI 실행방법
 #### 1. docker 실행(macos, windows의 경우 docker desktop 실행, linux는 sudo systemctl start docker)
 #### 2. cd ui 
 #### 3. docker build . -t ui-con
