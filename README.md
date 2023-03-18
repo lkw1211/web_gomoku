@@ -1,5 +1,8 @@
 # 웹 오목
 
+## website
+#### https://hellotesthello.duckdns.org
+
 ## 실행방법
 #### 1. docker 실행(macos, windows의 경우 docker desktop 실행, linux는 sudo systemctl start docker)
 #### 2. cd ui 
