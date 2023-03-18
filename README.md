@@ -1,6 +1,6 @@
 # 웹 오목
 
-## UI 실행방법
+## 실행방법
 #### 1. docker 실행(macos, windows의 경우 docker desktop 실행, linux는 sudo systemctl start docker)
 #### 2. cd ui 
 #### 3. docker build . -t ui-con
