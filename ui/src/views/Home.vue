@@ -45,10 +45,10 @@ export default {
 <style scoped lang="stylus">
 .title {
   display: block;
-  letter-spacing: -2px;
-  font-size: 2em;
-  margin-top: 0.34em;
-  margin-bottom: 0.67em;
+  letter-spacing: -0.3vmin;
+  font-size: 5vmin;
+  margin-top: 0.2vmin;
+  margin-bottom: 0.5vmin;
   margin-left: 0;
   margin-right: 0;
   font-weight: bold;
@@ -62,24 +62,17 @@ export default {
 }
 .game-type {
   display: block;
-  font-size: 1.5em;
+  font-size: 3.5vmin;
   margin-left: 0;
   margin-right: 0;
   font-weight: bold;
-  padding: 14px;
+  padding: 2vmin;
   text-align: center;
 }
 .image {
   width: 100%;
   display: block;
   -webkit-user-drag: none;
-}
-.bottom {
-  margin-top: 13px;
-  line-height: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 .click_button {
   cursor: pointer;
