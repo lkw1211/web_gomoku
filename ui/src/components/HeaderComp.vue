@@ -25,7 +25,7 @@
         <el-dialog
             v-model="state.settingVisible"
             title="Setting"
-            class="color-select-dialog"
+            :width="state.dialogWidth"
             :close-on-click-modal="false"
             :close-on-press-escape="false"
         >
@@ -63,7 +63,12 @@ export default {
         const state = reactive({
             settingVisible: false,
             timelimit: 20,
+            dialogWidth: window.innerWidth < 500 ? '100%' : '500px',
         });
+
+        window.onresize = () => {
+            state.dialogWidth = window.innerWidth < 500 ? '100%' : '500px';
+        }
 
         function home() {
             router.push({ name: 'home' });
@@ -83,6 +88,8 @@ export default {
 </script>
 
 <style scoped lang="stylus">
+
+
 @media	(min-aspect-ratio: 8/10) {
     .home {
         margin-top: 1.5vmin;
