@@ -83,48 +83,98 @@ export default {
 </script>
 
 <style scoped lang="stylus">
-.home {
-    margin-top: 1.5vmin;
-    width: 6vmin;
-    height: 6vmin;
-    margin-left: 3vmin;
-    cursor: pointer;
-}
-.title {
-    display: block;
-    font-size: 4vmin;
-    margin-top: 1vmin;
-    margin-bottom: 1vmin;
-    margin-left: 0;
-    margin-right: 0;
-    font-weight: bold;
-}
-.header-comp {
-    margin-left: calc(50vw - (82vmin - 50px) / 2)
-    width: calc((82vmin - 50px));
-}
+@media	(min-aspect-ratio: 8/10) {
+    .home {
+        margin-top: 1.5vmin;
+        width: 6vmin;
+        height: 6vmin;
+        margin-left: 3vmin;
+        cursor: pointer;
+    }
+    .title {
+        display: block;
+        font-size: 4vmin;
+        margin-top: 1vmin;
+        margin-bottom: 1vmin;
+        margin-left: 0;
+        margin-right: 0;
+        font-weight: bold;
+    }
+    .header-comp {
+        width: calc(82vmin - 50px);
+        position: relative;
+        display: inline-flex;
+    }
 
-.setting {
-    margin-top: 1.5vmin;
-    width: 5.5vmin;
-    height: 5.5vmin;
-    margin-right: 3vmin;
-    cursor: pointer;
-}
-.demonstration {
-    font-size: 2vmin;
-    line-height: 4vmin;
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-bottom: 0;
-}
+    .setting {
+        margin-top: 1.5vmin;
+        width: 6vmin;
+        height: 6vmin;
+        margin-right: 3vmin;
+        cursor: pointer;
+    }
+    .demonstration {
+        font-size: 2vmin;
+        line-height: 4vmin;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-bottom: 0;
+    }
 
-.left-spacing {
-    letter-spacing: -0.2vmin;
+    .left-spacing {
+        letter-spacing: -0.2vmin;
+    }
+    .slider {
+        flex: 0 0 70%;
+    }
 }
-.slider {
-    flex: 0 0 70%;
+@media	(max-aspect-ratio: 799/1000) {
+    .home {
+        margin-top: 1.5vmin;
+        width: 7vmin;
+        height: 7vmin;
+        margin-left: 3vmin;
+        cursor: pointer;
+    }
+    .title {
+        display: block;
+        font-size: 5vmin;
+        margin-top: 1vmin;
+        margin-bottom: 1vmin;
+        margin-left: 0;
+        margin-right: 0;
+        font-weight: bold;
+    }
+    .header-comp {
+        width: calc(100vw - 5px);
+        position: relative;
+        display: inline-flex;
+    }
+
+    .setting {
+        margin-top: 1.5vmin;
+        width: 7vmin;
+        height: 7vmin;
+        margin-right: 3vmin;
+        cursor: pointer;
+    }
+    .demonstration {
+        font-size: 2vmin;
+        line-height: 4vmin;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-bottom: 0;
+    }
+
+    .left-spacing {
+        letter-spacing: -0.2vmin;
+    }
+    .slider {
+        flex: 0 0 70%;
+    }
 }
 </style>
