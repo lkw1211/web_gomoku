@@ -1,6 +1,6 @@
 <template>
 	<div class="gomoku">
-		<div class="title">Gomoku AI</div>
+		<Header-comp title="Gomoku AI" @timelimitChange="timelimitChange"></Header-comp>
 		<div id="board">
 			<div id="boundary">
 				<div class="point" v-for="(item, index) in state.point" :key="index" :style="item"></div>
@@ -59,11 +59,13 @@
 </template>
 
 <script type="module">
-import { reactive, nextTick } from 'vue'
+import { reactive, onMounted } from 'vue';
+import HeaderComp from '@/components/HeaderComp.vue';
 
 export default {
   name: 'HomeView',
   components: {
+	HeaderComp
   },
   setup(props) {
 	function loadScript(src) {
@@ -84,15 +86,17 @@ export default {
 	let _foul_moves;
 	let _check_wld_already;
 
-	loadScript('gomoku.js').then(()=>{
-		loadScript('index.js').then(() => {
-			_think_and_move = think_and_move;
-			_make_move = make_move;
-			_rank_of = rank_of;
-			_file_of = file_of;
-			_foul_moves = foul_moves;
-			_check_wld_already = check_wld_already;
-		})
+	onMounted(async () => {
+		if (typeof wasm_bindgen == 'undefined') {
+			await loadScript('gomoku.js');
+			await loadScript('index.js');
+		}
+		_think_and_move = think_and_move;
+		_make_move = make_move;
+		_rank_of = rank_of;
+		_file_of = file_of;
+		_foul_moves = foul_moves;
+		_check_wld_already = check_wld_already;
 	});
 
 	let color = [];
@@ -161,17 +165,17 @@ export default {
 		const undoMoves = state.position.slice(-2);
 
 		undoMoves.forEach((move) => {
-			state.color[rank_of(move)][file_of(move)] = 'hide';
+			state.color[_rank_of(move)][_file_of(move)] = 'hide';
 		});
 		const oldLastMove = undoMoves.slice(-1)[0];
-		state.target[rank_of(oldLastMove)][file_of(oldLastMove)] = 'hide';
+		state.target[_rank_of(oldLastMove)][_file_of(oldLastMove)] = 'hide';
 
 		state.position = state.position.slice(0, -2);
 
 		if (state.position.length > 0) {
 			const lastMove = state.position.slice(-1)[0];
 
-			state.target[rank_of(lastMove)][file_of(lastMove)] = 'last';
+			state.target[_rank_of(lastMove)][_file_of(lastMove)] = 'last';
 		}
 
 		if (state.turn == 'black') {
@@ -186,7 +190,7 @@ export default {
 
 			// 금수 표시
 			_foul_moves(state.position).forEach(ban_move => {
-				state.color[rank_of(ban_move)][file_of(ban_move)] = 'ban';
+				state.color[_rank_of(ban_move)][_file_of(ban_move)] = 'ban';
 			});
 		}
 		state.winState = false;
@@ -243,7 +247,7 @@ export default {
 		try{
 			setTimeout(() => {
 				let target = _think_and_move(moves, state.time);
-				targetClick(rank_of(target), file_of(target), true);
+				targetClick(_rank_of(target), _file_of(target), true);
 				putClick(true);
 			}, 100);
 		} catch(err) {
@@ -252,7 +256,6 @@ export default {
 	}
 
 	async function putClick(byAI=state.soloPlay) {
-
 		if (state.player == 'none') {
 			state.colorSelectVisible = true;
 			return;
@@ -318,7 +321,7 @@ export default {
 			} else {
 				// 금수 표시
 				_foul_moves(state.position).forEach(ban_move => {
-					state.color[rank_of(ban_move)][file_of(ban_move)] = 'ban';
+					state.color[_rank_of(ban_move)][_file_of(ban_move)] = 'ban';
 				});
 
 				state.turn = 'black';
@@ -328,6 +331,10 @@ export default {
 				requestAINewPosition(state.position);
 			}
 		}
+	}
+
+	function timelimitChange(tl) {
+		state.time = tl;
 	}
 
     return { 
@@ -340,6 +347,7 @@ export default {
 		moveColor,
 		requestAINewPosition,
 		putClick,
+		timelimitChange,
     }
   }
 }
