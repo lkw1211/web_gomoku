@@ -84,13 +84,15 @@ export default {
 	let _foul_moves;
 	let _check_wld_already;
 
-	loadScript('gomoku.js').then(()=>loadScript('index.js')).then(async () => {
-		_think_and_move = think_and_move;
-		_make_move = make_move;
-		_rank_of = rank_of;
-		_file_of = file_of;
-		_foul_moves = foul_moves;
-		_check_wld_already = check_wld_already;
+	loadScript('gomoku.js').then(()=>{
+		loadScript('index.js').then(() => {
+			_think_and_move = think_and_move;
+			_make_move = make_move;
+			_rank_of = rank_of;
+			_file_of = file_of;
+			_foul_moves = foul_moves;
+			_check_wld_already = check_wld_already;
+		})
 	});
 
 	let color = [];
