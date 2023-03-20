@@ -16,7 +16,7 @@ export default {
   },
   methods: {
     Gomoku() {
-      router.push({ name: 'gomoku' })
+      router.push({ name: 'gomokuAI' })
     }
   }
 }

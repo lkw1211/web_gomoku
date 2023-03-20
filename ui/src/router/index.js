@@ -8,8 +8,8 @@ const routes = [
     name: "home",
     component: Home,
   },  {
-    path: "/gomoku",
-    name: "gomoku",
+    path: "/gomokuAI",
+    name: "gomokuAI",
     component: Gomoku,
   },
 ]

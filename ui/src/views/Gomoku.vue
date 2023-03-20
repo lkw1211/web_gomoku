@@ -146,6 +146,7 @@ export default {
 		winState: 0,
 		blackMinMaxPos: [-1, -1, -1, -1],
 		time: 20,
+		soloPlay: false,
 	};
 
 	const state = reactive(JSON.parse(JSON.stringify(initialState)));
@@ -199,7 +200,7 @@ export default {
 		state.colorSelectVisible = false;
 	}
 
-	function targetClick(i, j, byAI=false) {
+	function targetClick(i, j, byAI=state.soloPlay) {
 		if (state.player == 'none') {
 			state.colorSelectVisible = true;
 			return;
@@ -248,7 +249,7 @@ export default {
 		}
 	}
 
-	async function putClick(byAI=false) {
+	async function putClick(byAI=state.soloPlay) {
 
 		if (state.player == 'none') {
 			state.colorSelectVisible = true;
@@ -264,7 +265,7 @@ export default {
 			let j = state.current_target[1];
 
 			state.color[i][j] = state.turn;
-			state.position.push(make_move(i, j));
+			state.position.push(_make_move(i, j));
 
 			for (let a = 0; a < state.target.length; a++) {
 				for (let b = 0; b < state.target.length; b++) {
