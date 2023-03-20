@@ -26,6 +26,16 @@ declare namespace wasm_bindgen {
 	* @returns {number}
 	*/
 	export function file_of(m: number): number;
+	/**
+	* @param {any} ms
+	* @returns {any}
+	*/
+	export function foul_moves(ms: any): any;
+	/**
+	* @param {any} ms
+	* @returns {number}
+	*/
+	export function check_wld_already(ms: any): number;
 	
 }
 
@@ -37,6 +47,8 @@ declare interface InitOutput {
   readonly make_move: (a: number, b: number) => number;
   readonly rank_of: (a: number) => number;
   readonly file_of: (a: number) => number;
+  readonly foul_moves: (a: number, b: number) => void;
+  readonly check_wld_already: (a: number, b: number) => void;
   readonly memory: WebAssembly.Memory;
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number) => number;

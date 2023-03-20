@@ -59,14 +59,40 @@
 </template>
 
 <script type="module">
-import router from '@/router';
-import { reactive, computed, onMounted } from 'vue'
+import { reactive, nextTick } from 'vue'
 
 export default {
   name: 'HomeView',
   components: {
   },
   setup(props) {
+	function loadScript(src) {
+		return new Promise(function (resolve, reject) {
+			var s;
+			s = document.createElement('script');
+			s.src = src;
+			s.onload = resolve;
+			s.onerror = reject;
+			document.head.appendChild(s);
+		});
+	};
+	
+	let _think_and_move;
+	let _make_move;
+	let _rank_of;
+	let _file_of;
+	let _foul_moves;
+	let _check_wld_already;
+
+	loadScript('gomoku.js').then(()=>loadScript('index.js')).then(async () => {
+		_think_and_move = think_and_move;
+		_make_move = make_move;
+		_rank_of = rank_of;
+		_file_of = file_of;
+		_foul_moves = foul_moves;
+		_check_wld_already = check_wld_already;
+	});
+
 	let color = [];
 	let target = [];
 	let current_target = [];
@@ -123,20 +149,6 @@ export default {
 	};
 
 	const state = reactive(JSON.parse(JSON.stringify(initialState)));
-	const BOARD_BOUNDARY = 4;
-	const BOARD_SIDE_BIT = 5;
-
-	function make_move(r, f) {
-		return ((r + BOARD_BOUNDARY) << BOARD_SIDE_BIT) + f + BOARD_BOUNDARY
-	}
-
-	function rank_of(m) {
-		return (m >> BOARD_SIDE_BIT) - BOARD_BOUNDARY
-	}
-
-	function file_of(m) {
-		return (m & ((1 << BOARD_SIDE_BIT) - 1)) - BOARD_BOUNDARY
-	}
 
 	function resetClick() {
 		Object.assign(state, JSON.parse(JSON.stringify(initialState)));
@@ -169,23 +181,12 @@ export default {
 				}
 			}
 
-			// 금수 탐색
-			let banList = [];
-			for (let i = 0; i < state.color.length; i++) {
-				for (let j = 0; j < state.color.length; j++) {
-					if (isBanSearchTarget(i, j) && state.color[i][j] == 'hide') {
-						if (checkBan(i, j)) {
-							banList.push([i, j]);
-						}
-					}
-				}
-			}
-
 			// 금수 표시
-			banList.forEach(banPosition => {
-				state.color[banPosition[0]][banPosition[1]] = 'ban';
+			_foul_moves(state.position).forEach(ban_move => {
+				state.color[rank_of(ban_move)][file_of(ban_move)] = 'ban';
 			});
 		}
+		state.winState = false;
 	};
 
 	function selectColor(color) {
@@ -196,54 +197,6 @@ export default {
 			putClick(true);
 		}
 		state.colorSelectVisible = false;
-	}
-
-	function _checkWin(color) {
-		for (let i = 0; i < state.play_rows - 4; i++) {
-			for (let j = 0; j < state.play_rows; j++) {
-				if (state.color[i][j] == color && state.color[i+1][j] == color && state.color[i+2][j] == color && state.color[i+3][j] == color && state.color[i+4][j] == color) {
-					return true;
-				}
-			}
-		}
-
-		for (let j = 0; j < state.play_rows - 4; j++) {
-			for (let i = 0; i < state.play_rows; i++) {
-				if (state.color[i][j] == color && state.color[i][j+1] == color && state.color[i][j+2] == color && state.color[i][j+3] == color && state.color[i][j+4] == color) {
-					return true;
-				}
-			}
-		}
-
-		for (let i = 0; i < state.play_rows - 4; i++) {
-			for (let j = 0; j < state.play_rows - 4; j++) {
-				if (state.color[i][j] == color && state.color[i+1][j+1] == color && state.color[i+2][j+2] == color && state.color[i+3][j+3] == color && state.color[i+4][j+4] == color) {
-					return true;
-				}
-			}
-		}
-
-		for (let i = 0; i < state.play_rows - 4; i++) {
-			for (let j = 0; j < state.play_rows - 4; j++) {
-				if (state.color[state.play_rows - i - 1][j] == color && state.color[state.play_rows - i - 2][j+1] == color && state.color[state.play_rows - i - 3][j+2] == color && state.color[state.play_rows - i - 4][j+3] == color && state.color[state.play_rows - i - 5][j+4] == color) {
-					return true;
-				}
-			}
-		}
-
-		return false;
-	};
-
-	function checkWin() {
-		if (_checkWin('black')) {
-			return 1;
-		}
-
-		if (_checkWin('white')) {
-			return 2;
-		}
-
-		return 0;
 	}
 
 	function targetClick(i, j, byAI=false) {
@@ -283,316 +236,20 @@ export default {
 		return state.color[moveI][moveJ];
 	}
 
-	// moveCounts 0번이 1칸쪽 1번이 2칸쪽
-	function checkEndPoint1(i, j, direction, moveCounts) {
-		if (moveColor(i, j, direction, moveCounts[0]) == 'black'
-			|| (moveColor(i, j, direction, moveCounts[1]) == 'black' && moveColor(i, j, direction, moveCounts[0]) != 'hide')) {
-			return false;
-		}
-
-		return true;
-	}
-
-	function checkEndPoint2(i, j, direction, moveCounts) {
-		if (moveColor(i, j, direction, moveCounts[0]) == 'black'
-			|| moveColor(i, j, direction, moveCounts[1]) == 'black') {
-			return false;
-		}
-
-		return true;
-	}
-
-	// 3x3 금수
-	function check3Ban(i, j, direction) {
-
-		// XTBBXX
-		if (moveColor(i, j, direction, -1) == 'hide'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& moveColor(i, j, direction, 3) == 'hide'
-			&& moveColor(i, j, direction, 4) == 'hide'
-			&& checkEndPoint1(i, j, direction, [-2, 5])) return 1;
-
-		//XBTBXX
-		if (moveColor(i, j, direction, -2) == 'hide'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'hide'
-			&& moveColor(i, j, direction, 3) == 'hide'
-			&& checkEndPoint1(i, j, direction, [-3, 4])) return 1;
-
-		//XBBTXX
-		if (moveColor(i, j, direction, -3) == 'hide'
-			&& moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'hide'
-			&& moveColor(i, j, direction, 2) == 'hide'
-			&& checkEndPoint1(i, j, direction, [-4, 3])) return 1;
-
-		// XXTBBX
-		if (moveColor(i, j, direction, -2) == 'hide'
-			&& moveColor(i, j, direction, -1) == 'hide'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& moveColor(i, j, direction, 3) == 'hide'
-			&& checkEndPoint1(i, j, direction, [4, -3])) return 1;
-
-		// XXBTBX
-		if (moveColor(i, j, direction, -3) == 'hide'
-			&& moveColor(i, j, direction, -2) == 'hide'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'hide'
-			&& checkEndPoint1(i, j, direction, [3, -4])) return 1;
-
-		// XXBBTX
-		if (moveColor(i, j, direction, -4) == 'hide'
-			&& moveColor(i, j, direction, -3) == 'hide'
-			&& moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'hide'
-			&& checkEndPoint1(i, j, direction, [2, -5])) return 1;
-		
-		// XTXBBX
-		if (moveColor(i, j, direction, -1) == 'hide'
-			&& moveColor(i, j, direction, 1) == 'hide'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& moveColor(i, j, direction, 3) == 'black'
-			&& moveColor(i, j, direction, 4) == 'hide'
-			&& checkEndPoint2(i, j, direction, [-2, 5])) return 1;
-			
-		// XBXTBX
-		if (moveColor(i, j, direction, -3) == 'hide'
-			&& moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'hide'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'hide'
-			&& checkEndPoint2(i, j, direction, [-4, 3])) return 1;
-
-		// XBXBTX
-		if (moveColor(i, j, direction, -4) == 'hide'
-			&& moveColor(i, j, direction, -3) == 'black'
-			&& moveColor(i, j, direction, -2) == 'hide'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'hide'
-			&& checkEndPoint2(i, j, direction, [-5, 2])) return 1;
-
-		// XTBXBX
-		if (moveColor(i, j, direction, -1) == 'hide'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'hide'
-			&& moveColor(i, j, direction, 3) == 'black'
-			&& moveColor(i, j, direction, 4) == 'hide'
-			&& checkEndPoint2(i, j, direction, [-2, 5])) return 1;
-
-		// XBTXBX
-		if (moveColor(i, j, direction, -2) == 'hide'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'hide'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& moveColor(i, j, direction, 3) == 'hide'
-			&& checkEndPoint2(i, j, direction, [-3, 4])) return 1;
-
-		// XBBXTX
-		if (moveColor(i, j, direction, -4) == 'hide'
-			&& moveColor(i, j, direction, -3) == 'black'
-			&& moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'hide'
-			&& moveColor(i, j, direction, 1) == 'hide'
-			&& checkEndPoint2(i, j, direction, [-5, 2])) return 1;
-
-		return 0;
-	};
-
-	// 10 .... 23
-	function checkEndPoint3(i, j, direction, moveCounts) {
-		if (moveColor(i, j, direction, moveCounts[0]) == 'black'
-			|| moveColor(i, j, direction, moveCounts[2]) == 'black'
-			|| (
-				(moveColor(i, j, direction, moveCounts[0]) == 'white' || moveColor(i, j, direction, moveCounts[0]) == 'error'
-				|| (moveColor(i, j, direction, moveCounts[0]) == 'hide' && moveColor(i, j, direction, moveCounts[1]) == 'black')) 
-				&&
-				(moveColor(i, j, direction, moveCounts[2]) == 'white' || moveColor(i, j, direction, moveCounts[2]) == 'error'
-				|| (moveColor(i, j, direction, moveCounts[2]) == 'hide' && moveColor(i, j, direction, moveCounts[3]) == 'black'))
-				)
-			) {
-			return false;
-		}
-
-		return true;
-	}
-
-	// 0 .... 1
-	function checkEndPoint4(i, j, direction, moveCounts) {
-		if (moveColor(i, j, direction, moveCounts[0]) == 'black'
-			|| moveColor(i, j, direction, moveCounts[1]) == 'black'
-			) {
-			return false;
-		}
-
-		return true;
-	}
-
-	// 4x4 금수
-	function check4Ban(i, j, direction) {
-		// TBBB
-		if (moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& moveColor(i, j, direction, 3) == 'black'
-			&& checkEndPoint3(i, j, direction, [-1, -2, 4, 5])) return 1;
-		
-		// BTBB
-		if (moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& checkEndPoint3(i, j, direction, [-2, -3, 3, 4])) return 1;
-		
-		// BBTB
-		if (moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& checkEndPoint3(i, j, direction, [-3, -4, 2, 3])) return 1;
-		
-		// BBBT
-		if (moveColor(i, j, direction, -3) == 'black'
-			&& moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& checkEndPoint3(i, j, direction, [-4, -5, 1, 2])) return 1;
-		
-		// TBBXB
-		if (moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& moveColor(i, j, direction, 3) == 'hide'
-			&& moveColor(i, j, direction, 4) == 'black'
-			&& checkEndPoint4(i, j, direction, [-1, 5])) return 1;
-
-		// BTBXB
-		if (moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'hide'
-			&& moveColor(i, j, direction, 3) == 'black'
-			&& checkEndPoint4(i, j, direction, [-2, 4])) return 1;
-
-		// BBTXB
-		if (moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'hide'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& checkEndPoint4(i, j, direction, [-3, 3])) return 1;
-
-		// BBBXT
-		if (moveColor(i, j, direction, -3) == 'black'
-			&& moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'hide'
-			&& checkEndPoint4(i, j, direction, [-4, 2])) return 1;
-		
-		// TBXBB
-		if (moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'hide'
-			&& moveColor(i, j, direction, 3) == 'black'
-			&& moveColor(i, j, direction, 4) == 'black'
-			&& checkEndPoint4(i, j, direction, [-1, 5])) return 1;
-
-		// BTXBB
-		if (moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'hide'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& moveColor(i, j, direction, 3) == 'black'
-			&& checkEndPoint4(i, j, direction, [-2, 4])) return 1;
-
-		// BBXTB
-		if (moveColor(i, j, direction, -3) == 'black'
-			&& moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'hide'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& checkEndPoint4(i, j, direction, [-4, 2])) return 1;
-
-		// BBXBT
-		if (moveColor(i, j, direction, -4) == 'black'
-			&& moveColor(i, j, direction, -3) == 'black'
-			&& moveColor(i, j, direction, -2) == 'hide'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& checkEndPoint4(i, j, direction, [-5, 1])) return 1;
-
-		return 0;
-	};
-
-	// 장목 금수
-	function check6Ban(i, j, direction) {
-
-		// BTBBBB
-		if (moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& moveColor(i, j, direction, 3) == 'black'
-			&& moveColor(i, j, direction, 4) == 'black') return 1;
-
-		// BBTBBB
-		if (moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'black'
-			&& moveColor(i, j, direction, 3) == 'black') return 1;
-
-		// BBBTBB
-		if (moveColor(i, j, direction, -3) == 'black'
-			&& moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'black'
-			&& moveColor(i, j, direction, 2) == 'black') return 1;
-
-		// BBBBTB
-		if (moveColor(i, j, direction, -4) == 'black'
-			&& moveColor(i, j, direction, -3) == 'black'
-			&& moveColor(i, j, direction, -2) == 'black'
-			&& moveColor(i, j, direction, -1) == 'black'
-			&& moveColor(i, j, direction, 1) == 'black') return 1;
-
-		return 0;
-	};
-
-	function checkBan(i, j) {
-		let BanCount3;
-		let BanCount4;
-		let BanCount6;
-
-		BanCount3 = check3Ban(i, j, [0, 1]) + check3Ban(i, j, [1, 0]) + check3Ban(i, j, [1, 1]) + check3Ban(i, j, [-1, 1]);
-		BanCount4 = check4Ban(i, j, [0, 1]) + check4Ban(i, j, [1, 0]) + check4Ban(i, j, [1, 1]) + check4Ban(i, j, [-1, 1]);
-		BanCount6 = check6Ban(i, j, [0, 1]) + check6Ban(i, j, [1, 0]) + check6Ban(i, j, [1, 1]) + check6Ban(i, j, [-1, 1]);
-
-		if (BanCount3 >= 2 || BanCount4 >= 2 || BanCount6 >= 1) {
-			return true;
-		}
-
-		return false;
-	};
-
-	function isBanSearchTarget(i, j) {
-		let limit = 2;
-		let iMinLimit = state.blackMinMaxPos[0] - limit;
-		let iMaxLimit = state.blackMinMaxPos[1] + limit;
-		let jMinLimit = state.blackMinMaxPos[2] - limit;
-		let jMaxLimit = state.blackMinMaxPos[3] + limit;
-
-		if (i >= iMinLimit && i <= iMaxLimit && j >= jMinLimit && j <= jMaxLimit) {
-			return true;
-		}
-
-		return false;
-	};
-
-	async function requestAINewPosition(moves) {
+	function requestAINewPosition(moves) {
 		try{
-			const target = await _think_and_move(moves, state.time);
-			targetClick(rank_of(target), file_of(target), true);
-			putClick(true);
+			setTimeout(() => {
+				let target = _think_and_move(moves, state.time);
+				targetClick(rank_of(target), file_of(target), true);
+				putClick(true);
+			}, 100);
 		} catch(err) {
 			alert(err);
 		}
 	}
 
 	async function putClick(byAI=false) {
+
 		if (state.player == 'none') {
 			state.colorSelectVisible = true;
 			return;
@@ -619,7 +276,8 @@ export default {
 			state.target[i][j] = 'last';
 
 			// 게임 종료 판단
-			state.winState = checkWin();
+			state.winState = _check_wld_already(state.position);
+			
 
 			if (state.winState > 0) {
 				setTimeout(() => {
@@ -655,28 +313,16 @@ export default {
 
 				state.turn = 'white';
 			} else {
-				// 금수 탐색
-				let banList = [];
-				for (let i = 0; i < state.color.length; i++) {
-					for (let j = 0; j < state.color.length; j++) {
-						if (isBanSearchTarget(i, j) && state.color[i][j] == 'hide') {
-							if (checkBan(i, j)) {
-								banList.push([i, j]);
-							}
-						}
-					}
-				}
-
 				// 금수 표시
-				banList.forEach(banPosition => {
-					state.color[banPosition[0]][banPosition[1]] = 'ban';
+				_foul_moves(state.position).forEach(ban_move => {
+					state.color[rank_of(ban_move)][file_of(ban_move)] = 'ban';
 				});
 
 				state.turn = 'black';
 			}
 
 			if (state.turn != state.player && !byAI) {
-				await requestAINewPosition(state.position);
+				requestAINewPosition(state.position);
 			}
 		}
 	}
@@ -686,20 +332,9 @@ export default {
 		resetClick,
 		undoClick,
 		selectColor,
-		_checkWin,
-		checkWin,
 		targetClick,
 		moveCheck,
 		moveColor,
-		checkEndPoint1,
-		checkEndPoint2,
-		check3Ban,
-		checkEndPoint3,
-		checkEndPoint4,
-		check4Ban,
-		check6Ban,
-		checkBan,
-		isBanSearchTarget,
 		requestAINewPosition,
 		putClick,
     }

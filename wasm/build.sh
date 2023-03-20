@@ -20,5 +20,5 @@ RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals -C link-arg=
 # the memory import to each wasm module.
 wasm-bindgen \
   ./target/wasm32-unknown-unknown/release/gomoku.wasm \
-  --out-dir ../ui/public \
+  --out-dir . \
   --target no-modules

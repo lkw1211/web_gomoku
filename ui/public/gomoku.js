@@ -247,6 +247,46 @@ __exports.file_of = function(m) {
     return ret;
 };
 
+/**
+* @param {any} ms
+* @returns {any}
+*/
+__exports.foul_moves = function(ms) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        wasm.foul_moves(retptr, addHeapObject(ms));
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        var r2 = getInt32Memory0()[retptr / 4 + 2];
+        if (r2) {
+            throw takeObject(r1);
+        }
+        return takeObject(r0);
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+};
+
+/**
+* @param {any} ms
+* @returns {number}
+*/
+__exports.check_wld_already = function(ms) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        wasm.check_wld_already(retptr, addHeapObject(ms));
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        var r2 = getInt32Memory0()[retptr / 4 + 2];
+        if (r2) {
+            throw takeObject(r1);
+        }
+        return r0;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+};
+
 function handleError(f, args) {
     try {
         return f.apply(this, args);
@@ -309,6 +349,17 @@ function getImports() {
     imports.wbg.__wbg_performance_8629f414811abc46 = function(arg0) {
         const ret = getObject(arg0).performance;
         return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__wbg_new_b525de17f44a8943 = function() {
+        const ret = new Array();
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbindgen_number_new = function(arg0) {
+        const ret = arg0;
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_set_17224bc548dd1d7b = function(arg0, arg1, arg2) {
+        getObject(arg0)[arg1 >>> 0] = takeObject(arg2);
     };
     imports.wbg.__wbg_isArray_39d28997bf6b96b4 = function(arg0) {
         const ret = Array.isArray(getObject(arg0));
@@ -471,7 +522,6 @@ function getImports() {
     return imports;
 }
 
-// maximum 크기는 256MB = 4096(256 * 1024 * 1024 / 65536), iphone, ipad 등 기기에서 wasm에 허용되는 최대 메모리 크기가 작음
 function initMemory(imports, maybe_memory) {
     imports.wbg.memory = maybe_memory || new WebAssembly.Memory({initial:154,maximum:4096,shared:true});
 }

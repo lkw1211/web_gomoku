@@ -2,8 +2,6 @@ use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
 use strum::IntoEnumIterator;
 use std::ops::{Add, Sub, Mul, Div, Index, IndexMut};
 use std::mem;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[path="pattern.rs"]
 mod pattern;
@@ -70,7 +68,7 @@ fn get_bits(a: u32, begin: u32, end: u32) -> u32 {
 }
 
 fn set_bit(a: &mut u32, ind: i32) {
-    *a |= ((1 as u32) << ind);
+    *a |= (1 as u32) << ind;
 }
 
 fn reset_bit(a: &mut u32, ind: i32) {
@@ -135,7 +133,6 @@ fn index_of_helper(m: Move, d: Direction) -> i32 {
         Direction::DFile => _file_of(m) + BOARD_SIDE,
         Direction::DMDiag => _mdiag_of(m) + BOARD_SIDE * 2,
         Direction::DADiag => _adiag_of(m) + BOARD_SIDE * 4 - 1,
-        _ => 0
     }
 }
 
@@ -145,7 +142,6 @@ fn index_on_helper(m: Move, d: Direction) -> i32 {
         Direction::DFile => _rank_of(m),
         Direction::DMDiag => _mdiag_index_on(m),
         Direction::DADiag => _adiag_index_on(m),
-        _ => 0
     }
 }
 
@@ -567,7 +563,7 @@ impl BitBoard {
     }
 
     fn insert(&mut self, m: Move) {
-        self.bitboard[(m >> 6) as usize] |= ((1 as u64) << (m & 63));
+        self.bitboard[(m >> 6) as usize] |= (1 as u64) << (m & 63);
     }
 
     fn remove(&mut self, m: Move) {
@@ -632,7 +628,7 @@ impl MoveList<Move> {
         }
     }
 
-    fn insert(&mut self, m: Move, s: Score) {
+    fn insert(&mut self, m: Move) {
         if !self.contains(m) {
             self._movelist[self.off_the_end] = m;
             self.off_the_end += 1;
@@ -1023,10 +1019,9 @@ impl MoveGen {
     }
 
     pub fn next_move(&mut self) -> ExtMove {
-        let mut bestIt: usize;
         let mut ret: ExtMove = ExtMove {m: MOVE_NONE, s: SCORE_NONE};
 
-        while true {
+        loop {
             match self.stage {
                 Stage::MainTT | Stage::VcfTT => {
                     self.generate(GenType::TTMOVE);
@@ -1053,7 +1048,7 @@ impl MoveGen {
                         self.stage = self.stage + 1;
                         continue;
                     }
-                    bestIt = self.movelist.max(self.picked, self.size() as usize);
+                    let bestIt = self.movelist.max(self.picked, self.size() as usize);
                     ret = self.movelist.begin(Some(bestIt));
                     self.movelist.swap(self.picked, bestIt);
                     self.picked += 1;
@@ -1885,7 +1880,7 @@ impl Board {
         return ret;
     }
 
-    fn check_wld_already(&self) -> Color {
+    pub fn check_wld_already(&self) -> Color {
         if self.query(Color::Black, Material::C5) > 0 {
             return Color::Black;
         }
@@ -1974,13 +1969,32 @@ impl Board {
 
         for i in N2.iter() {
             if self.is_empty(m + *i) {
-                self.m_list_stack[self.piece_cnt].insert(m + *i, SCORE_NONE);
+                self.m_list_stack[self.piece_cnt].insert(m + *i);
             }
         }
     }
 
-    fn is_empty(&self, m: Move) -> bool {
+    pub fn is_empty(&self, m: Move) -> bool {
         self._board[m as usize] == Color::Hide
+    }
+
+    pub unsafe fn is_foul(&mut self, m: Move) -> bool {
+        let mut ret: bool = false;
+        let need_to_switch = self.side_to_move != Color::Black;
+
+        if need_to_switch {
+            self.switch_side_to_move();
+        }
+        
+        self.do_move(m);
+        ret = self.query(Color::Black, Material::C6) > 0 || self.query_inc(Color::Black, Material::F4) + self.query_inc(Color::Black, Material::B4) >= 2 || self.f3_formed_cnt[Color::Black as usize] >= 2;
+        self.undo_move();
+
+        if need_to_switch {
+            self.switch_side_to_move();
+        }
+
+        return ret;
     }
 
     pub fn defend_b4(&self) -> Move {
@@ -2023,7 +2037,7 @@ fn _adiag_of(m: Move) -> i32 {
 fn _mdiag_index_on(m: Move) -> i32 {
     let mut i = 1;
 
-    while is_ok_move((m - D[Direction::DMDiag as usize] * i)) {
+    while is_ok_move(m - D[Direction::DMDiag as usize] * i) {
         i += 1;
     }
 
@@ -2033,7 +2047,7 @@ fn _mdiag_index_on(m: Move) -> i32 {
 fn _adiag_index_on(m: Move) -> i32 {
     let mut i = 1;
 
-    while is_ok_move((m - D[Direction::DADiag as usize] * i)) {
+    while is_ok_move(m - D[Direction::DADiag as usize] * i) {
         i += 1;
     }
 
@@ -2042,7 +2056,7 @@ fn _adiag_index_on(m: Move) -> i32 {
 
 fn _start_of(m: Move, d: Direction) -> Move {
     let mut i = 1;
-    while is_ok_move((m - D[d as usize] * i)) {
+    while is_ok_move(m - D[d as usize] * i) {
         i += 1;
     }
 
@@ -2051,7 +2065,7 @@ fn _start_of(m: Move, d: Direction) -> Move {
 
 fn _end_of(m: Move, d: Direction) -> Move {
     let mut i = 1;
-    while is_ok_move((m + D[d as usize] * i)) {
+    while is_ok_move(m + D[d as usize] * i) {
         i += 1;
     }
 

@@ -1,10 +1,5 @@
 use wasm_bindgen::prelude::*;
 use std::cmp;
-use std::{cell::RefCell,rc::Rc};
-
-macro_rules! console_log {
-    ($($t:tt)*) => (crate::log(&format_args!($($t)*).to_string()))
-}
 
 // mod pool;
 
@@ -20,8 +15,8 @@ unsafe fn start() {
     FUTILITY_MOVE_COUNT[1][0] = -12;
 
     for i in 1..DEPTH_NUM as usize {
-        FUTILITY_MOVE_COUNT[0][i] = cmp::min((((5 as f64) * (i as f64).sqrt() - (2 as f64)).round() as i32), 8);
-        FUTILITY_MOVE_COUNT[1][i] = cmp::min((((15 as f64) * (i as f64).sqrt() - (12 as f64)).round() as i32), 32);
+        FUTILITY_MOVE_COUNT[0][i] = cmp::min(((5 as f64) * (i as f64).sqrt() - (2 as f64)).round() as i32, 8);
+        FUTILITY_MOVE_COUNT[1][i] = cmp::min(((15 as f64) * (i as f64).sqrt() - (12 as f64)).round() as i32, 32);
         for mc in 1..MOVE_SIZE as usize {
             let r = (i as f64).ln() * (mc as f64).ln() / 2.0;
             REDUCTION[0][i][mc] = r.round() as Depth;
@@ -125,13 +120,13 @@ unsafe fn reset_search() {
 
 pub unsafe fn search() -> Move {
     let mut rem: RootExtMove = RootExtMove::new();
-    let mut score: Score = SCORE_NONE;
     let mut valid_result: bool = true;
     let mut break_search: bool = false;
+
     for it_depth in DEPTH_ITERATIVE_MIN..DEPTH_ITERATIVE_MAX+1 {
         itd = it_depth as i32;
         reset_alpha_beta();
-        score = alpha_beta(NodeType::PV, it_depth, -INFINITY_SCORE, INFINITY_SCORE, false);
+        let score = alpha_beta(NodeType::PV, it_depth, -INFINITY_SCORE, INFINITY_SCORE, false);
         rem.set(score, it_depth, SEARCH_STACK[0].pv.clone());
 
         if terminated() && is_empty(SEARCH_STACK[0].pv.as_ref()) {
@@ -145,13 +140,6 @@ pub unsafe fn search() -> Move {
         if valid_result {
             ROOT_BESTS.push(rem);
         }
-
-        // if ROOT_BESTS.len() > 0 {
-        //     let rbrs = ROOT_BESTS.last().unwrap_unchecked().score;
-        //     let rbrm = ROOT_BESTS.last().unwrap_unchecked().pv[0];
-        //     console_log!("break_search: {}, it_depth: {}, best_score: {}, valid_result: {}", break_search, it_depth, rbrs, valid_result);
-        //     console_log!("after root_bests ({},{})", rank_of(rbrm), file_of(rbrm));
-        // }
 
         if break_search {
             break;
@@ -173,6 +161,48 @@ pub fn rank_of(m: Move) -> i32 {
 #[wasm_bindgen]
 pub fn file_of(m: Move) -> i32 {
     _file_of(m)
+}
+
+#[wasm_bindgen]
+pub unsafe fn foul_moves(ms: JsValue) -> Result<JsValue, JsValue> {
+    let moves: Vec<Move> = serde_wasm_bindgen::from_value(ms)?;
+    let mut foul_moves: Vec<Move> = Vec::new();
+
+    reset_search();
+    BOARD.as_mut().unwrap().reset();
+    
+    for m in moves.iter() {
+        BOARD.as_mut().unwrap().do_move(*m);
+    }
+
+    for m in 0..MOVE_CAPACITY as Move {
+        if BOARD.as_ref().unwrap().is_empty(m) {
+            if BOARD.as_mut().unwrap().is_foul(m) {
+                foul_moves.push(m);
+            }
+        }
+    }
+
+    return Ok(serde_wasm_bindgen::to_value(&foul_moves)?);
+}
+
+#[wasm_bindgen]
+pub unsafe fn check_wld_already(ms: JsValue) -> Result<i32, JsValue> {
+    let moves: Vec<Move> = serde_wasm_bindgen::from_value(ms)?;
+    let mut foul_moves: Vec<Move> = Vec::new();
+
+    reset_search();
+    BOARD.as_mut().unwrap().reset();
+    
+    for m in moves.iter() {
+        BOARD.as_mut().unwrap().do_move(*m);
+    }
+
+    return Ok(match BOARD.as_ref().unwrap().check_wld_already() {
+        Color::Black => 1,
+        Color::White => 2,
+        _ => 0
+    });
 }
 
 unsafe fn terminated() -> bool {
@@ -423,13 +453,12 @@ unsafe fn score_from_tt(s: Score) -> Score {
 
 unsafe fn vcf(nt: NodeType, depth: Depth, root_node: bool) -> Score {
     let pv_node: bool = nt == NodeType::PV;
-    let mut color: Color;
     let mut offset: Score = -1;
 
     if !root_node {
         PLY_MAX = cmp::max(PLY_MAX, PLY);
 
-        color = BOARD.as_ref().unwrap().check_wld(&mut offset);
+        let color = BOARD.as_ref().unwrap().check_wld(&mut offset);
         if offset != -1 {
             if color == BOARD.as_ref().unwrap().side_to_move {
                 return WIN_SCORE - PLY as Score - offset;

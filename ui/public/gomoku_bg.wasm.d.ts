@@ -5,6 +5,8 @@ export function think_and_move(a: number, b: number, c: number): void;
 export function make_move(a: number, b: number): number;
 export function rank_of(a: number): number;
 export function file_of(a: number): number;
+export function foul_moves(a: number, b: number): void;
+export function check_wld_already(a: number, b: number): void;
 export const memory: WebAssembly.Memory;
 export function __wbindgen_malloc(a: number): number;
 export function __wbindgen_realloc(a: number, b: number, c: number): number;

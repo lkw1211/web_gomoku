@@ -1,5 +1,5 @@
 // First up, but try to do feature detection to provide better error messages
-async function check_wasm() {
+async function load_wasm() {
   let msg = 'This demo requires a current version of Firefox (e.g., 79.0)';
   if (typeof SharedArrayBuffer !== 'function') {
     alert('this browser does not have SharedArrayBuffer support enabled' + '\n\n' + msg);
@@ -14,13 +14,9 @@ async function check_wasm() {
     return false
   }
 
-  return true
+  await wasm_bindgen('./gomoku_bg.wasm');
 }
 
-const { think_and_move } = wasm_bindgen;
-async function _think_and_move(moves, time_limit) {
-  if (await check_wasm()) {
-    await wasm_bindgen('./gomoku_bg.wasm');
-    return think_and_move(moves, time_limit);
-  }
-}
+load_wasm();
+
+const { think_and_move, make_move, rank_of, file_of, foul_moves, check_wld_already } = wasm_bindgen;
