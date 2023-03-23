@@ -59,7 +59,7 @@
 </template>
 
 <script type="module">
-import { reactive, onMounted } from 'vue';
+import { reactive, onBeforeUnmount } from 'vue';
 import HeaderComp from '@/components/HeaderComp.vue';
 
 export default {
@@ -71,6 +71,12 @@ export default {
 	let myWorker = new Worker("../worker.js");
 	try {
 		myWorker.postMessage('initialize');
+		window.onbeforeunload = event => {
+			myWorker.terminate();
+		};
+		onBeforeUnmount(() => {
+			myWorker.terminate();
+		});
 	} catch (err) {
 		alert(`${err}`);
 	}
