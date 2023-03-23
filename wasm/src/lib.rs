@@ -30,19 +30,17 @@ unsafe fn start() {
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     unsafe fn log(s: &str);
-    #[wasm_bindgen(js_namespace = ["window", "performance"])]
-    unsafe fn now() -> i32;
+    #[no_mangle]
+    #[used]
+    static performance:web_sys::Performance;
 }
 
-static mut PERFORMANCE: Option<web_sys::Performance> = None;
 static mut PERF_START: f64 = 0.0;
 static mut TIME_LIMIT: i32 = 30;
 
 #[wasm_bindgen]
 pub unsafe fn think_and_move(ms: JsValue, tl: i32) -> Result<Move, JsValue> {
-    let window: web_sys::Window = web_sys::window().unwrap_unchecked();
-    PERFORMANCE = Some(window.performance().unwrap_unchecked());
-    PERF_START = PERFORMANCE.as_ref().unwrap_unchecked().now();
+    PERF_START = performance.now();
     TIME_LIMIT = tl;
     let moves: Vec<Move> = serde_wasm_bindgen::from_value(ms)?;
 
@@ -206,7 +204,7 @@ pub unsafe fn check_wld_already(ms: JsValue) -> Result<i32, JsValue> {
 }
 
 unsafe fn terminated() -> bool {
-    let elasped = PERFORMANCE.as_ref().unwrap_unchecked().now() - PERF_START;
+    let elasped = performance.now() - PERF_START;
     let limit = (TIME_LIMIT * 1000 - 50) as f64;
 
     return elasped >= limit;
