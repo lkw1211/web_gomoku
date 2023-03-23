@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from "../views/Home.vue";
-import Gomoku from "../views/Gomoku.vue";
+import GomokuAI from "../views/GomokuAI.vue";
+import GomokuOnline from "../views/GomokuOnline.vue";
 
 const routes = [
   {
@@ -10,8 +11,12 @@ const routes = [
   },  {
     path: "/gomokuAI",
     name: "gomokuAI",
-    component: Gomoku,
-  },
+    component: GomokuAI,
+  }, {
+    path: "/gomokuOnline",
+    name: "gomokuOnline",
+    component: GomokuOnline,
+  }
 ]
 
 const router = createRouter({

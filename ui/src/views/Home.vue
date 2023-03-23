@@ -8,7 +8,7 @@
           :span="10"
           :offset="0"
         >
-          <el-card :body-style="{ padding: '0px' }" class="click_button" @click="Gomoku">
+          <el-card :body-style="{ padding: '0px' }" class="click_button" @click="GomokuAI">
             <img
               src="gomoku.png"
               class="image"
@@ -18,6 +18,20 @@
             </div>
           </el-card>
         </el-col>
+        <!-- <el-col
+          :span="10"
+          :offset="4"
+        >
+          <el-card :body-style="{ padding: '0px' }" class="click_button" @click="GomokuOnline">
+            <img
+              src="gomoku.png"
+              class="image"
+            />
+            <div class="game-type">
+              <span>Gomoku Online</span>
+            </div>
+          </el-card>
+        </el-col> -->
       </el-row>
     </el-card>
   </div>
@@ -31,12 +45,17 @@ export default {
   components: {
   },
   setup(props) {
-    function Gomoku() {
+    function GomokuAI() {
       router.push({ name: 'gomokuAI' });
     }
 
+    function GomokuOnline() {
+      router.push({ name: 'gomokuOnline' });
+    }
+
     return {
-      Gomoku
+      GomokuAI,
+      GomokuOnline
     }
   }
 }
