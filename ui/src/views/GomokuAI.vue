@@ -206,13 +206,19 @@ export default {
 	const state = reactive(JSON.parse(JSON.stringify(initialState)));
 
 	function resetClick() {
-		if (state.turn != state.player && state.winState == 0) return;
+		if (state.turn != state.player && state.winState == 0) {
+			alert("It cannot be reset during the AI's turn.");
+			return;
+		}
 		Object.assign(state, JSON.parse(JSON.stringify(initialState)));
 	}
 
 	async function undoClick() {
 		const p_len = state.position.length;
-		if ((state.turn != state.player && state.winState == 0) || p_len < 2) return;
+		if ((state.turn != state.player && state.winState == 0) || p_len < 2) {
+			alert("It cannot be undone during the AI's turn.");
+			return;
+		}
 		const lastMove = [await _rank_of(state.position[p_len - 1]), await _file_of(state.position[p_len - 1])];
 		const secondlastMove = [await _rank_of(state.position[p_len - 2]), await _file_of(state.position[p_len - 2])];
 		
@@ -241,7 +247,7 @@ export default {
 			let foul_moves = await _foul_moves(state.position);
 			
 			foul_moves.forEach(async move => {
-				state.color[await _rank_of(ban_move)][await _file_of(ban_move)] = 'ban';
+				state.color[await _rank_of(move)][await _file_of(move)] = 'ban';
 			});
 		}
 		state.winState = 0;
@@ -318,6 +324,8 @@ export default {
 			let i = state.current_target[0];
 			let j = state.current_target[1];
 
+			state.current_target = [];
+
 			state.color[i][j] = state.turn;
 			state.position.push(await _make_move(i, j));
 
@@ -369,9 +377,18 @@ export default {
 				state.turn = 'white';
 			} else {
 				// 금수 표시
-				await Promise.all((await _foul_moves(state.position)).map(async ban_move => {
-					state.color[await _rank_of(ban_move)][await _file_of(ban_move)] = 'ban';
-				}));
+				let foul_moves = await _foul_moves(state.position);
+
+				for (let foul_move of foul_moves) {
+					let rank = await _rank_of(foul_move);
+					let file = await _file_of(foul_move);
+
+					state.color[rank][file] = 'ban';
+				}
+
+				// await Promise.all((await _foul_moves(state.position)).map(async ban_move => {
+				// 	state.color[await _rank_of(ban_move)][await _file_of(ban_move)] = 'ban';
+				// }));
 
 				state.turn = 'black';
 			}
