@@ -198,7 +198,6 @@ export default {
 		player: 'black',
 		turn: 'black',
 		winState: 0,
-		blackMinMaxPos: [-1, -1, -1, -1],
 		time: 20,
 		soloPlay: false,
 	};
@@ -360,18 +359,6 @@ export default {
 							state.color[i][j] = 'hide';
 						}
 					}
-				}
-
-				// 흑돌 위치 최대 최소 표시
-				if (state.blackMinMaxPos[0] == -1) {
-					state.blackMinMaxPos = [i, i, j, j];
-				} else {
-					let iMin = Math.min(i, state.blackMinMaxPos[0]);
-					let iMax = Math.max(i, state.blackMinMaxPos[1]);
-					let jMin = Math.min(j, state.blackMinMaxPos[2]);
-					let jMax = Math.max(j, state.blackMinMaxPos[3]);
-
-					state.blackMinMaxPos = [iMin, iMax, jMin, jMax];
 				}
 
 				state.turn = 'white';
@@ -620,6 +607,7 @@ export default {
 		left: @top;
 		transform: translate(-50%, -50%);
 	}
+	
 	
 	.title {
 	  display: block;

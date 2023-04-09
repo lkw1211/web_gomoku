@@ -199,7 +199,8 @@ pub unsafe fn check_wld_already(ms: JsValue) -> Result<i32, JsValue> {
     return Ok(match BOARD.as_ref().unwrap().check_wld_already() {
         Color::Black => 1,
         Color::White => 2,
-        _ => 0
+        Color::Hide => 3,
+        Color::None => 0
     });
 }
 

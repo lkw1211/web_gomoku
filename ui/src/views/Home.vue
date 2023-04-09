@@ -18,7 +18,7 @@
             </div>
           </el-card>
         </el-col>
-        <!-- <el-col
+        <el-col
           :span="10"
           :offset="4"
         >
@@ -31,7 +31,7 @@
               <span>Gomoku Online</span>
             </div>
           </el-card>
-        </el-col> -->
+        </el-col>
       </el-row>
     </el-card>
   </div>
